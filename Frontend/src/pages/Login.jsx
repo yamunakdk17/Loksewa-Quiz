@@ -29,10 +29,10 @@ function Login() {
                     throw new Error(data.message || "Login failed");
                 }
 
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("user", JSON.stringify(data.user));
+                localStorage.setItem("token", data.data.token);
+                localStorage.setItem("user", JSON.stringify(data.data.user));
 
-                if (data.user.role === "admin") {
+                if (data.data.user.role === "admin") {
                     window.location.href = "/admin";
                 } else {
                     window.location.href = "/dashboard";

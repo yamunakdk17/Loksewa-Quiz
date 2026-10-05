@@ -150,9 +150,7 @@ function Home() {
                 }`}
               >
                 {sector}{" "}
-                <span className="ml-1 rounded-full bg-gray-100 px-2 py-1 text-xs">
-                  {[9, 4, 3, 3, 2][index]}
-                </span>
+               
               </button>
             )
           )}

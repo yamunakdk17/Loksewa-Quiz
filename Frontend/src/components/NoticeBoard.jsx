@@ -1,59 +1,73 @@
+import React, { useEffect, useState } from "react";
+import { getAllNotices } from "../services/noticeService";
 
-import { useState } from "react";
+const API_URL = "http://localhost:5000";
 
-const notices = [
-  {
-    sectors: ["Administration"],
-    title: "9th Level Officer (non-technical and technical), Local Service. 36 vacancies.",
-    organization: "Madhesh Pradesh Lok Sewa Aayog",
-    notice: "Notice no. 107/2083-84. Various services, groups and sub-groups. Apply online at ppsconline.p2.gov.np.",
-    deadline: "30 Sep 2026",
-    status: "Closes in 8 days",
-    detail: "Double fee until 7 Oct 2026",
-    source: "EducateNepal",
-    type: "VACANCY",
-  },
-  {
-    sectors: ["Administration", "Education", "Health"],
-    title: "9th, 8th and 7th level officer posts (non-technical and technical), Local Service. 19 vacancies.",
-    organization: "Karnali Pradesh Lok Sewa Aayog",
-    notice: "Notice no. 09/2083-084. Services: local engineering, health, education and administration. Exam centre: Birendranagar, Surkhet.",
-    deadline: "5 Oct 2026",
-    status: "Closes in 13 days",
-    detail: "Double fee until 12 Oct 2026",
-    source: "EducateNepal",
-    type: "VACANCY",
-  },
-  {
-    sectors: ["Administration", "Health"],
-    title: "Annual vacancy calendar for fiscal year 2083/84, all provinces.",
-    organization: "Public Service Commission (federal)",
-    notice: "Effective 17 July 2026 to 16 July 2027. Covers the federal civil, health, parliament and human rights services, security agencies and organised institutions.",
-    deadline: "No deadline",
-    status: "Information",
-    detail: "Effective 17 Jul 2026 to 16 Jul 2027",
-    source: "CollegeNP",
-    type: "CALENDAR",
-  },
+const tabs = [
+  "All",
+  "Administration",
+  "Education",
+  "Health",
+  "Agriculture",
+  "Engineering",
+  "Finance",
+  "IT",
+  "General Knowledge",
 ];
 
-// const tabs = [
-//   { name: "All", count: 9 },
-//   { name: "Administration" },
-//   { name: "Education", count: 3 },
-//   { name: "Health", count: 3 },
-//   { name: "IT", count: 2 },
-// ];
-
 function NoticeBoard() {
+  const [notices, setNotices] = useState([]);
   const [activeTab, setActiveTab] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchNotices = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await getAllNotices();
+
+      console.log("STUDENT NOTICE API:", result);
+      console.log("NOTICE DATA:", result.data);
+      
+      setNotices(result.data || []);
+    } catch (error) {
+      console.error("Failed to fetch notices:", error);
+      setError(error.message || "Failed to fetch notices");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotices();
+  }, []);
 
   const filteredNotices =
     activeTab === "All"
       ? notices
-      : notices.filter((notice) =>
-          notice.sectors.includes(activeTab)
-        );
+      : notices.filter(
+        (notice) =>
+          notice.sector?.toLowerCase() ===
+          activeTab.toLowerCase()
+      );
+
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+
+    return new Date(date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const getPdfUrl = (pdfPath) => {
+    if (!pdfPath) return "#";
+
+    return `${API_URL}${pdfPath}`;
+  };
 
   return (
     <section className="bg-white">
@@ -61,171 +75,158 @@ function NoticeBoard() {
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-serif text-3xl font-bold text-[#182235]">
-            Notice board
-          </h2>
+          <div>
+            <h2 className="font-serif text-3xl font-bold text-[#182235]">
+              Notice Board
+            </h2>
 
-          <span className="text-sm text-gray-500">
-            Checked 21 Sep 2026
-          </span>
+            <p className="mt-1 text-sm text-gray-500">
+              Latest official notices and announcements
+            </p>
+          </div>
+
+          <button
+            onClick={fetchNotices}
+            className="rounded-full border border-gray-300 px-5 py-2 text-sm font-semibold text-[#182235] hover:bg-gray-50"
+          >
+            Refresh
+          </button>
         </div>
 
         {/* Tabs */}
-        <div className="mt-6 flex flex-wrap gap-x-7 border-b border-gray-200">
-
+        <div className="mt-6 flex flex-wrap gap-x-7 gap-y-3 border-b border-gray-200">
           {tabs.map((tab) => {
-            const isActive = activeTab === tab.name;
+            const isActive = activeTab === tab;
 
             return (
               <button
-                key={tab.name}
-                onClick={() => setActiveTab(tab.name)}
-                className={`border-b-2 px-1 pb-4 text-sm font-semibold transition ${
-                  isActive
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`border-b-2 px-1 pb-4 text-sm font-semibold transition ${isActive
                     ? "border-[#1769AA] text-[#182235]"
                     : "border-transparent text-gray-500 hover:text-[#1769AA]"
-                }`}
+                  }`}
               >
-                {tab.name}
-
-                <span className="ml-2 rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-xs">
-                  {tab.count}
-                </span>
+                {tab}
               </button>
             );
           })}
-
         </div>
 
-        {/* Description and Filter */}
-        <div className="flex flex-wrap items-center justify-between gap-4 py-5">
+        {/* Loading */}
+        {loading && (
+          <div className="py-12 text-center text-gray-500">
+            Loading notices...
+          </div>
+        )}
 
-          <p className="text-sm text-gray-500">
-            Newest deadlines first. Closed notices are kept below for reference.
-          </p>
+        {/* Error */}
+        {!loading && error && (
+          <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-5 text-center text-red-600">
+            {error}
+          </div>
+        )}
 
-          <button className="rounded-full border border-gray-300 px-5 py-2 text-sm font-semibold text-[#182235] hover:bg-gray-50">
-            Open notices only
-          </button>
+        {/* Notice Cards */}
+        {!loading && !error && (
+          <div className="mt-6 space-y-5">
 
-        </div>
+            {filteredNotices.map((notice) => (
+              <div
+                key={notice.id}
+                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md"
+              >
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
-        {/* Table */}
-        <div className="overflow-x-auto border border-gray-200">
+                  {/* Notice Content */}
+                  <div className="flex-1">
 
-          <table className="w-full min-w-[950px] text-left text-sm">
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      <span className="rounded-full border border-[#B9D9F5] bg-[#EEF7FF] px-3 py-1 text-xs font-semibold text-[#0874BD]">
+                        {notice.sector}
+                      </span>
 
-            <thead className="bg-[#F6F8FA] text-gray-500">
-              <tr>
-                <th className="w-[14%] px-4 py-3">Sector</th>
-                <th className="w-[39%] px-4 py-3">Notice</th>
-                <th className="w-[14%] px-4 py-3">Deadline</th>
-                <th className="w-[18%] px-4 py-3">Status</th>
-                <th className="w-[15%] px-4 py-3">Source</th>
-              </tr>
-            </thead>
+                      <span className="rounded-full border border-gray-300 bg-gray-50 px-3 py-1 text-xs font-semibold uppercase text-gray-500">
+                        {notice.notice_type}
+                      </span>
 
-            <tbody>
-              {filteredNotices.map((notice, index) => (
-                <tr
-                  key={index}
-                  className="border-t border-gray-200 align-top"
-                >
-
-                  {/* Sector */}
-                  <td className="border-l-[3px] border-l-[#0874BD] px-3 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      {notice.sectors.map((sector) => (
-                        <span
-                          key={sector}
-                          className="rounded-full border border-[#B9D9F5] bg-[#EEF7FF] px-2 py-1 text-xs font-semibold text-[#0874BD]"
-                        >
-                          {sector}
-                        </span>
-                      ))}
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${notice.status?.toLowerCase() ===
+                            "open"
+                            ? "border border-green-300 bg-green-50 text-green-600"
+                            : "border border-gray-300 bg-gray-50 text-gray-500"
+                          }`}
+                      >
+                        {notice.status}
+                      </span>
                     </div>
-                  </td>
 
-                  {/* Notice */}
-                  <td className="px-4 py-4">
-
-                    <h3 className="text-base font-bold leading-6 text-[#303B4C]">
+                    <h3 className="text-xl font-bold text-[#303B4C]">
                       {notice.title}
                     </h3>
 
-                    <div className="mt-2">
-                      <span className="mr-2 border border-gray-300 px-2 py-1 text-[10px] font-semibold text-gray-500">
-                        {notice.type}
-                      </span>
-
-                      <span className="text-sm text-gray-500">
+                    {notice.organization && (
+                      <p className="mt-2 text-sm font-semibold text-gray-600">
                         {notice.organization}
-                      </span>
-                    </div>
-
-                    <p className="mt-2 text-sm leading-6 text-gray-500">
-                      {notice.notice}
-                    </p>
-
-                  </td>
-
-                  {/* Deadline */}
-                  <td className="px-4 py-4">
-                    <span className="font-bold text-[#303B4C]">
-                      {notice.deadline}
-                    </span>
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-4 py-4">
-
-                    {notice.type === "CALENDAR" ? (
-                      <span className="inline-block rounded-full border border-blue-500 px-2 py-1 text-xs font-semibold text-blue-600">
-                        {notice.status}
-                      </span>
-                    ) : (
-                      <>
-                        <span className="inline-block rounded-full border border-red-400 px-2 py-1 text-xs font-semibold text-red-500">
-                          {notice.status}
-                        </span>
-
-                        <p className="mt-2 text-sm text-gray-500">
-                          {notice.detail}
-                        </p>
-                      </>
+                      </p>
                     )}
 
-                  </td>
+                    {notice.description && (
+                      <p className="mt-3 text-sm leading-6 text-gray-500">
+                        {notice.description}
+                      </p>
+                    )}
 
-                  {/* Source */}
-                  <td className="px-4 py-4">
-                    <a
-                      href="#"
-                      className="font-medium text-[#0874BD] underline"
-                    >
-                      {notice.source}
-                    </a>
-                  </td>
+                    <div className="mt-4 flex flex-wrap gap-6 text-sm text-gray-500">
+                      <div>
+                        <span className="font-semibold text-[#303B4C]">
+                          Published:
+                        </span>{" "}
+                        {formatDate(
+                          notice.published_date
+                        )}
+                      </div>
 
-                </tr>
-              ))}
+                      <div>
+                        <span className="font-semibold text-[#303B4C]">
+                          Deadline:
+                        </span>{" "}
+                        {formatDate(
+                          notice.deadline
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
-              {filteredNotices.length === 0 && (
-                <tr>
-                  <td
-                    colSpan="5"
-                    className="px-4 py-8 text-center text-gray-500"
-                  >
-                    No notices available for this sector.
-                  </td>
-                </tr>
-              )}
+                  {/* PDF Button */}
+                  <div className="flex-shrink-0">
+                    {notice.notice_pdf && (
+                      <a
+                        href={getPdfUrl(
+                          notice.notice_pdf
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block rounded-lg bg-[#0874BD] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0767AA]"
+                      >
+                        View Notice PDF
+                      </a>
+                    )}
+                  </div>
 
-            </tbody>
+                </div>
+              </div>
+            ))}
 
-          </table>
+            {/* No notices */}
+            {filteredNotices.length === 0 && (
+              <div className="rounded-lg border border-gray-200 py-12 text-center text-gray-500">
+                No notices available for this sector.
+              </div>
+            )}
 
-        </div>
+          </div>
+        )}
 
       </div>
     </section>

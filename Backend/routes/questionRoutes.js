@@ -5,10 +5,15 @@ const {
   getQuestion,
 } = require("../controllers/questionController");
 
-// Create question
-router.post("/create", createQuestion);
+const protect = require("../middleware/authMiddleware");
+const allowRoles = require("../middleware/roleMiddleware");
 
+
+
+// Create question -admin only 
+router.post("/create", protect, allowRoles("admin"), createQuestion);
 // Get questions
 router.get("/get", getQuestion);
+
 
 module.exports = router;

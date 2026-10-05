@@ -27,7 +27,7 @@ function Navbar() {
         <Link to="/" className="flex items-center gap-3">
 
           <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#0874BD] text-lg font-bold text-white">
-            YK
+            lQ
           </span>
 
           <span className="font-serif text-xl font-bold text-[#182235]">
