@@ -1,6 +1,7 @@
 const pastQuestionService = require("../services/pastQuestionService");
 const response = require("../utils/response");
 
+// Upload past-question PDF or DOCX
 const uploadPastQuestion = async (req, res) => {
   try {
     if (!req.file) {

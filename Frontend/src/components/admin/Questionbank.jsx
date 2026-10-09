@@ -7,7 +7,7 @@ import {
     initialMCQForm,
 } from "../../constants/adminConstants";
 
-function PracticeQuizSection({ showToast }) {
+function questionSection({ showToast }) {
     const [quiz, setQuiz] = useState(initialQuizForm);
     const [mcq, setMcq] = useState(initialMCQForm);
     const [mcqFile, setMcqFile] = useState(null);
@@ -307,4 +307,4 @@ function Field({ label, children }) {
     );
 }
 
-export default PracticeQuizSection;
+export default questionSection;

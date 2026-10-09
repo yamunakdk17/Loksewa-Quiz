@@ -1,129 +1,237 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 function Login() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const handleLogin = (e) => {
-        e.preventDefault();
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-        fetch("http://localhost:5000/api/auth/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email,
-                password
-            })
-        })
-            .then(async (response) => {
-                const data = await response.json();
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
+      });
 
-                console.log("LOGIN RESPONSE:", data);
+      const result = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(data.message || "Login failed");
-                }
+      if (!response.ok || result.success === false) {
+        throw new Error(
+          result.message || "Invalid email or password."
+        );
+      }
 
-                localStorage.setItem("token", data.data.token);
-                localStorage.setItem("user", JSON.stringify(data.data.user));
+      const token = result.data?.token;
+      const user = result.data?.user;
 
-                if (data.data.user.role === "admin") {
-                    window.location.href = "/admin";
-                } else {
-                    window.location.href = "/dashboard";
-                }
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-        
-        
-    };
+      if (!token || !user) {
+        throw new Error("Login response is missing the token or user.");
+      }
 
-    return (
-        <div className="min-h-screen bg-[#0868a9] flex items-center justify-center px-5">
-            <div className="w-full max-w-[410px] min-h-[515px] bg-white rounded-[20px] px-[35px] py-[35px] text-center">
+      // Store only the user information needed by the frontend.
+      const safeUser = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      };
 
-                <h1 className="text-[30px] font-bold text-slate-800 font-serif leading-tight">
-                    Welcome back!
-                </h1>
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(safeUser));
 
-                <p className="mt-3 mb-[30px] text-[15px] text-slate-500">
-                    Log in to your account
-                </p>
+      // Redirect according to the user's role.
+      if (String(user.role).toLowerCase() === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    } catch (err) {
+      setError(
+        err.message === "Failed to fetch"
+          ? "Cannot connect to the server. Please check that your backend is running."
+          : err.message || "Unable to log in."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                <form
-                    onSubmit={handleLogin}
-                    className="flex flex-col gap-4"
+  return (
+    <div className="app-grid min-h-screen bg-white">
+      <div className="mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[1.05fr_.95fr]">
+        <div className="hidden flex-col justify-between bg-[#182235] p-10 text-white lg:flex xl:p-14">
+          <Link to="/" className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0874BD] text-xs font-black">
+              LQ
+            </span>
+            <span className="font-extrabold">Loksewa Quiz</span>
+          </Link>
+
+          <div className="max-w-xl">
+            <p className="text-xs font-black uppercase tracking-[.18em] text-[#FFAA0A]">
+              Your preparation desk
+            </p>
+
+            <h1 className="mt-5 text-5xl font-black leading-[1.03] tracking-[-.04em]">
+              Come back to where your progress is.
+            </h1>
+
+            <p className="mt-6 max-w-md text-base leading-7 text-slate-400">
+              Your practice history, saved questions and study progress stay
+              together so every session has a clear next step.
+            </p>
+
+            <div className="mt-9 grid grid-cols-3 gap-3">
+              {[
+                ["15", "Q / quiz"],
+                ["6", "sectors"],
+                ["24/7", "practice"],
+              ].map(([number, label]) => (
+                <div
+                  key={label}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
                 >
-
-                    <input
-                        type="email"
-                        placeholder="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="
-                            w-full h-[57px] px-4 border border-[#d7dce1] rounded-xl
-                            text-[15px] text-slate-700 placeholder:text-slate-500
-                            placeholder:font-semibold outline-none
-                            focus:border-[#0874bd]
-                        "
-                    />
-
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="
-                            w-full h-[57px] px-4 border border-[#d7dce1] rounded-xl
-                            text-[15px] text-slate-700 placeholder:text-slate-500
-                            placeholder:font-semibold outline-none
-                            focus:border-[#0874bd]
-                        "
-                    />
-
-                    <button
-                        type="submit"
-                        className="
-                            w-full h-[52px] mt-[34px] bg-[#0874bd]
-                            hover:bg-[#0767aa] text-white rounded-[11px]
-                            text-[15px] font-bold shadow-md cursor-pointer
-                            transition
-                        "
-                    >
-                        Log in
-                    </button>
-
-                </form>
-
-                <p className="mt-6 text-[14px] text-slate-500">
-                    Don't have an account?{" "}
-                    <Link
-                        to="/register"
-                        className="text-[#0874bd] font-bold underline"
-                    >
-                        Sign up
-                    </Link>
-                </p>
-
-                <p className="mt-5 text-[14px] leading-[1.6] text-slate-500">
-                    Your account and scores are saved in this browser, on
-                    <br />
-                    this device only.
-                </p>
-
+                  <p className="text-xl font-black">{number}</p>
+                  <p className="mt-1 text-xs text-slate-500">{label}</p>
+                </div>
+              ))}
             </div>
-        </div>
-    );
-}
+          </div>
 
+          <p className="text-xs text-slate-500">
+            Focused design. Fixed brand palette. No distracting theme controls.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-center px-5 py-10 sm:px-10">
+          <div className="w-full max-w-[440px]">
+            <div className="mb-8 lg:hidden">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-3 font-extrabold"
+              >
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0874BD] text-xs font-black text-white">
+                  LQ
+                </span>
+                Loksewa Quiz
+              </Link>
+            </div>
+
+            <div className="mb-8">
+              <p className="text-xs font-black uppercase tracking-[.16em] text-[#0874BD]">
+                Student login
+              </p>
+
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-[#182235]">
+                Welcome back.
+              </h1>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Log in to continue your preparation.
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              <label className="block">
+                <span className="mb-2 block text-xs font-extrabold text-slate-600">
+                  Email address
+                </span>
+
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="you@example.com"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition placeholder:text-slate-300 focus:border-[#0874BD] focus:ring-4 focus:ring-[#0874BD]/10"
+                />
+              </label>
+
+              <label className="block">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-slate-600">
+                    Password
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-400">
+                    Keep it private
+                  </span>
+                </div>
+
+                <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  placeholder="Enter your password"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition placeholder:text-slate-300 focus:border-[#0874BD] focus:ring-4 focus:ring-[#0874BD]/10"
+                />
+              </label>
+
+              {error && (
+                <div
+                  role="alert"
+                  className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600"
+                >
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="h-12 w-full rounded-xl bg-[#0874BD] text-sm font-extrabold text-white shadow-[0_8px_20px_rgba(8,116,189,.16)] transition hover:bg-[#07538E] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Signing you in…" : "Log in"}
+              </button>
+            </form>
+
+            <div className="my-7 flex items-center gap-3">
+              <span className="h-px flex-1 bg-slate-100" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+                or
+              </span>
+              <span className="h-px flex-1 bg-slate-100" />
+            </div>
+
+            <p className="text-center text-sm text-slate-500">
+              New to Loksewa Quiz?{" "}
+              <Link
+                to="/register"
+                className="font-extrabold text-[#0874BD] hover:underline"
+              >
+                Create an account
+              </Link>
+            </p>
+
+            <Link
+              to="/"
+              className="mt-6 block text-center text-xs font-bold text-slate-400 hover:text-[#0874BD]"
+            >
+              ← Back to home
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default Login;

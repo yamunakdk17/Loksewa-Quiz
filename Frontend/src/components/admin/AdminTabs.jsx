@@ -1,42 +1,10 @@
-import React from "react";
-
 function AdminTabs({ activeTab, setActiveTab }) {
-    const tabs = [
-        {
-            id: "past",
-            label: " Add Past Question",
-        },
-        {
-            id: "quiz",
-            label: " Add Practice Quiz",
-        },
-        {
-            id: "questionbank",
-            label: " Question Bank",
-        },
-        {
-            id: "notice",
-            label: " Notice Board",
-        },
-    ];
-
-    return (
-        <nav className="mb-6 flex gap-2 overflow-x-auto border-b border-slate-200 pb-2">
-            {tabs.map((tab) => (
-                <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`whitespace-nowrap rounded-lg px-4 py-3 text-sm font-semibold transition ${activeTab === tab.id
-                            ? "bg-slate-800 text-white"
-                            : "text-slate-600 hover:bg-slate-200"
-                        }`}
-                >
-                    {tab.label}
-                </button>
-            ))}
-        </nav>
-    );
+  const tabs = [
+    ["past", "Past questions"],
+    ["quiz", "Practice quizzes"],
+    ["questionbank", "Question bank"],
+    ["notice", "Notice board"],
+  ];
+  return <nav className="mb-6 flex gap-2 overflow-x-auto border-b border-slate-200 pb-2">{tabs.map(([id,label])=><button key={id} type="button" onClick={()=>setActiveTab(id)} className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-extrabold transition ${activeTab===id ? "bg-[#182235] text-white" : "text-slate-500 hover:bg-slate-100"}`}>{label}</button>)}</nav>;
 }
-
 export default AdminTabs;

@@ -1,146 +1,88 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+const navItems = [
+  { label: "Home", path: "/" },
+  { label: "Practice Quiz", path: "/quiz" },
+  { label: "Past papers", path: "/past-questions" },
+];
+
+function Mark() {
+  return (
+    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#0874BD] text-[13px] font-black tracking-tight text-white shadow-[0_8px_20px_rgba(8,116,189,.22)]">
+      LQ
+    </span>
+  );
+}
+
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Quiz", path: "/quiz" },
-    { name: "Past Questions", path: "/past-questions" },
-  ];
-
-  const handleLogout = () => {
+  const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
     navigate("/login");
   };
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-3">
-
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#0874BD] text-lg font-bold text-white">
-            lQ
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center gap-5 px-4 sm:px-6 lg:px-8">
+        <Link to="/" className="flex min-w-0 items-center gap-3">
+          <Mark />
+          <span className="hidden min-[430px]:block">
+            <span className="block text-[15px] font-extrabold tracking-[-.02em] text-[#182235]">Loksewa Quiz</span>
+            <span className="block text-[11px] font-medium text-slate-400">Practice smarter. Prepare better.</span>
           </span>
-
-          <span className="font-serif text-xl font-bold text-[#182235]">
-            Loksewa Quiz
-          </span>
-
         </Link>
 
-
-        {/* =========================
-            NAVIGATION
-        ========================= */}
-
-        <div className="flex h-full items-center gap-1">
-
-          {/* Normal Navigation Links */}
-
-          {navLinks.map((link) => {
-
-            const isActive = location.pathname === link.path;
-
+        <nav className="ml-auto hidden items-center gap-1 md:flex">
+          {navItems.map((item) => {
+            const active = location.pathname === item.path;
             return (
               <Link
-                key={link.path}
-                to={link.path}
-                className={`flex h-full items-center border-b-2 px-4 text-sm font-semibold transition ${
-                  isActive
-                    ? "border-[#1769AA] text-[#1769AA]"
-                    : "border-transparent text-[#182235] hover:text-[#1769AA]"
+                key={item.path}
+                to={item.path}
+                className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                  active ? "bg-[#EAF4FB] text-[#07538E]" : "text-slate-600 hover:bg-slate-50 hover:text-[#0874BD]"
                 }`}
               >
-                {link.name}
+                {item.label}
               </Link>
             );
-
           })}
+        </nav>
 
-
-          {/* =========================
-              NOT LOGGED IN
-          ========================= */}
-
-          {!user && (
-            <Link
-              to="/login"
-              className={`ml-3 rounded-md px-5 py-2 text-sm font-semibold transition ${
-                location.pathname === "/login"
-                  ? "bg-[#1769AA] text-white"
-                  : "border border-gray-300 text-[#182235] hover:bg-[#1769AA] hover:text-white"
-              }`}
-            >
-              Login
-            </Link>
-          )}
-
-
-          {/* =========================
-              STUDENT LOGGED IN
-          ========================= */}
-
-          {user && user.role === "student" && (
+        <div className="ml-auto flex items-center gap-2 md:ml-4">
+          {!user ? (
             <>
-              <Link
-                to="/dashboard"
-                className={`ml-3 rounded-md px-5 py-2 text-sm font-semibold transition ${
-                  location.pathname === "/dashboard"
-                    ? "bg-[#1769AA] text-white"
-                    : "border border-gray-300 text-[#182235] hover:bg-[#1769AA] hover:text-white"
-                }`}
-              >
-                Dashboard
-              </Link>
-
-              <button
-                onClick={handleLogout}
-                className="ml-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
-              >
-                Logout
-              </button>
+              <Link to="/login" className="hidden rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 sm:block">Log in</Link>
+              <Link to="/register" className="rounded-xl bg-[#0874BD] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#07538E]">Get started</Link>
+            </>
+          ) : user.role === "admin" ? (
+            <>
+              <Link to="/admin" className="rounded-xl bg-[#0874BD] px-4 py-2.5 text-sm font-bold text-white">Admin</Link>
+              <button onClick={logout} className="hidden rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:block">Log out</button>
+            </>
+          ) : (
+            <>
+              <Link to="/dashboard" className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-[#182235] hover:border-[#B9D9ED] hover:text-[#0874BD]">My study</Link>
+              <button onClick={logout} className="hidden rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:block">Log out</button>
             </>
           )}
-
-
-          {/* =========================
-              ADMIN LOGGED IN
-          ========================= */}
-
-          {user && user.role === "admin" && (
-            <>
-              <Link
-                to="/admin"
-                className={`ml-3 rounded-md px-5 py-2 text-sm font-semibold transition ${
-                  location.pathname.startsWith("/admin")
-                    ? "bg-[#1769AA] text-white"
-                    : "border border-gray-300 text-[#182235] hover:bg-[#1769AA] hover:text-white"
-                }`}
-              >
-                Admin
-              </Link>
-
-              <button
-                onClick={handleLogout}
-                className="ml-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
-              >
-                Logout
-              </button>
-            </>
-          )}
-
         </div>
-
       </div>
-    </nav>
+
+      <div className="border-t border-slate-100 md:hidden">
+        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 py-2 sm:px-6">
+          {navItems.map((item) => (
+            <Link key={item.path} to={item.path} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-bold ${location.pathname === item.path ? "bg-[#EAF4FB] text-[#07538E]" : "text-slate-500"}`}>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    </header>
   );
 }
 

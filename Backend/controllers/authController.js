@@ -87,10 +87,16 @@ const loginUser = (req, res) => {
           },
         );
 
-        return response.success(res, "Login successful", {
-          token,
-          user,
-        });
+     
+return response.success(res, "Login successful", {
+  token,
+  user: {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  },
+});
       });
     })
     .catch((error) => {

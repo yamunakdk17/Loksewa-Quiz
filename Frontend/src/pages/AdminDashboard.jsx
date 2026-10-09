@@ -1,65 +1,70 @@
-import React, { useState } from "react";
-
+import { useState } from "react";
 import AdminTabs from "../components/admin/AdminTabs";
 import PastQuestionSection from "../components/admin/PastQuestionSection";
-import PracticeQuizSection from "../components/admin/PracticeQuizSection";
+import QuestionSection from "../components/admin/questionSection"; 
 import Questionbank from "../components/admin/Questionbank";
 import NoticeBoardSection from "../components/admin/NoticeBoardSection";
 
+const modules = [
+  ["past", "Past questions", "Build paper library"],
+  ["quiz", "Practice quizzes", "Create MCQs"],
+  ["questionbank", "Question bank", "Review question pool"],
+  ["notice", "Notice board", "Publish updates"],
+];
+
 function AdminDashboard() {
-    const [activeTab, setActiveTab] = useState("past");
-    const [toast, setToast] = useState("");
+  const [activeTab, setActiveTab] = useState("past");
+  const [toast, setToast] = useState("");
 
-    const showToast = (message) => {
-        setToast(message);
+  const showToast = (message) => {
+    setToast(message);
+    window.clearTimeout(window.__lqToast);
+    window.__lqToast = window.setTimeout(() => setToast(""), 3000);
+  };
 
-        setTimeout(() => {
-            setToast("");
-        }, 3000);
-    };
+  const active = modules.find(([id]) => id === activeTab);
 
-    return (
-        <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-[1400px]">
-
-                <AdminTabs
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                />
-
-                {activeTab === "past" && (
-                    <PastQuestionSection
-                        showToast={showToast}
-                    />
-                )}
-
-                {activeTab === "quiz" && (
-                    <PracticeQuizSection
-                        showToast={showToast}
-                    />
-                )}
-
-                {activeTab === "questionbank" && (
-                    <Questionbank
-                        showToast={showToast}
-                    />
-                )}
-
-                {activeTab === "notice" && (
-                    <NoticeBoardSection
-                        showToast={showToast}
-                    />
-                )}
-
-            </div>
-
-            {toast && (
-                <div className="fixed bottom-5 right-5 z-50 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-lg">
-                    {toast}
-                </div>
-            )}
+  return (
+    <div className="min-h-screen bg-[#F6F9FC]">
+      <div className="border-b border-slate-200 bg-[#182235] text-white">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0874BD] text-xs font-black">LQ</span><div><p className="text-[15px] font-extrabold">Loksewa Quiz</p><p className="text-[10px] font-bold uppercase tracking-[.15em] text-slate-400">Admin workspace</p></div></div>
+          <a href="/" className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-extrabold text-slate-300 hover:bg-white/5 hover:text-white">View student site ↗</a>
         </div>
-    );
-}
+      </div>
 
+      <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="mb-7">
+          <p className="text-xs font-black uppercase tracking-[.16em] text-[#0874BD]">Content control centre</p>
+          <div className="mt-2 flex flex-col justify-between gap-3 lg:flex-row lg:items-end"><div><h1 className="text-3xl font-black tracking-tight text-[#182235]">Good morning, admin.</h1><p className="mt-2 text-sm text-slate-500">Manage the content students see. Each workspace keeps one task in focus.</p></div><div className="text-xs font-bold text-slate-400">Content status <span className="ml-1 text-[#187A46]">● All systems ready</span></div></div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[["4","Content modules","Past · Quiz · Bank · Notices"],["128","Question records","Across all active sectors"],["06","Open notices","Visible to students"]].map(([n,l,d])=><div key={l} className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-3xl font-black text-[#182235]">{n}</p><p className="mt-1 text-sm font-extrabold">{l}</p><p className="mt-1 text-xs text-slate-400">{d}</p></div>)}
+        </div>
+
+        <div className="mt-7 grid gap-6 lg:grid-cols-[235px_1fr]">
+          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-2 lg:sticky lg:top-6">
+            <p className="px-3 py-3 text-[10px] font-black uppercase tracking-[.16em] text-slate-400">Workspace</p>
+            {modules.map(([id,label,desc])=><button key={id} onClick={()=>setActiveTab(id)} className={`mb-1 w-full rounded-xl p-3 text-left transition ${activeTab===id ? "bg-[#EAF4FB] text-[#07538E]" : "text-slate-600 hover:bg-slate-50"}`}><span className="block text-sm font-extrabold">{label}</span><span className={`mt-1 block text-[10px] ${activeTab===id ? "text-[#0874BD]" : "text-slate-400"}`}>{desc}</span></button>)}
+            <div className="mt-3 rounded-xl bg-[#FFF9EA] p-3"><p className="text-[10px] font-black uppercase tracking-widest text-[#A56A00]">Design note</p><p className="mt-2 text-[11px] leading-5 text-slate-500">Forms stay spacious and grouped so content entry is faster on desktop and tablet.</p></div>
+          </aside>
+
+          <section className="min-w-0">
+            <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><p className="text-xs font-black uppercase tracking-[.16em] text-[#0874BD]">Current workspace</p><h2 className="mt-1 text-xl font-black text-[#182235]">{active?.[1]}</h2><p className="mt-1 text-sm text-slate-500">{active?.[2]}.</p></div><span className="w-fit rounded-full bg-[#EAF7EF] px-3 py-1.5 text-[11px] font-black text-[#187A46]">● Active</span></div>
+            </div>
+            <div className="[&>div]:!rounded-2xl [&>div]:!border-slate-200 [&>div]:!shadow-none">
+              {activeTab === "past" && <PastQuestionSection showToast={showToast} />}
+              {activeTab === "quiz" && <QuestionSection showToast={showToast} />}              {activeTab === "questionbank" && <Questionbank showToast={showToast} />}
+              {activeTab === "notice" && <NoticeBoardSection showToast={showToast} />}
+            </div>
+          </section>
+        </div>
+      </div>
+
+      {toast && <div className="fixed bottom-5 right-5 z-50 max-w-sm rounded-xl bg-[#182235] px-5 py-3 text-sm font-bold text-white shadow-2xl">{toast}</div>}
+    </div>
+  );
+}
 export default AdminDashboard;
